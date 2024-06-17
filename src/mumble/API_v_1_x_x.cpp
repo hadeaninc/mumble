@@ -17,6 +17,7 @@
 #include "Settings.h"
 #include "UserModel.h"
 #include "Version.h"
+#include "VoiceRecorder.h"
 #include "Global.h"
 
 #define MUMBLE_PLUGIN_NO_DEFAULT_FUNCTION_DEFINITIONS
@@ -1647,6 +1648,90 @@ void MumbleAPI::playSample_v_1_2_x(mumble_plugin_id_t callerID, const char *samp
 	}
 }
 
+void MumbleAPI::toggleRecording_v_1_0_x(mumble_plugin_id_t callerID, const char* folder,
+										void* stoppedCallback,
+										std::shared_ptr< api_promise_t > promise) {
+	if (QThread::currentThread() != thread()) {
+		// Invoke in main thread
+		QMetaObject::invokeMethod(this, "toggleRecording_v_1_0_x", Qt::QueuedConnection,
+								  Q_ARG(mumble_plugin_id_t, callerID),
+								  Q_ARG(const char*, folder),
+								  Q_ARG(void*, stoppedCallback),
+								  Q_ARG(std::shared_ptr< api_promise_t >, promise));
+
+		return;
+	}
+
+	api_promise_t::lock_guard_t guard = promise->lock();
+	if (promise->isCancelled()) {
+		return;
+	}
+
+	VERIFY_PLUGIN_ID(callerID);
+
+	const auto serverHandler = Global::get().sh;
+	if (serverHandler) {
+		if (serverHandler->recorder) {
+			// Stop recording.
+			// Based on: VoiceRecorderDialog::on_qpbStop_clicked().
+			const auto recorder(serverHandler->recorder);
+			serverHandler->recorder.reset();
+			// We don't announce recording state to the server, since we will
+			// be recording frequently, and by default some clients will play
+			// a sound every time a record starts and stops which we want to
+			// avoid.
+			// serverHandler->announceRecordingState(false);
+			recorder->stop();
+		} else {
+			// Start recording.
+			// Based on: VoiceRecorderDialog::on_qpbStart_clicked().
+			AudioOutputPtr ao(Global::get().ao);
+			if (!ao) {
+				EXIT_WITH(MUMBLE_EC_POINTER_NOT_FOUND);
+			}
+
+			// Create the recorder
+			VoiceRecorder::Config config;
+			config.sampleRate      = static_cast< int >(ao->getMixerFreq());
+			config.fileName        = QDir(QString::fromStdString(folder)).absoluteFilePath("%user.wav");
+			config.mixDownMode     = false;
+			config.recordingFormat = VoiceRecorderFormat::WAV;
+
+			if (config.sampleRate == 0) {
+				// If we don't catch this here, Mumble will crash because VoiceRecorder expects the sample rate to be non-zero
+				Global::get().l->log(Log::Warning,
+									 tr("Unable to start recording - the audio output is miconfigured (0Hz sample rate)"));
+				EXIT_WITH(MUMBLE_EC_INTERNAL_ERROR);
+			}
+
+			// We don't announce recording state to the server, since we will
+			// be recording frequently, and by default some clients will play
+			// a sound every time a record starts and stops which we want to
+			// avoid.
+			// serverHandler->announceRecordingState(true);
+
+			serverHandler->recorder.reset(new VoiceRecorder(this, config));
+			const auto recorder(serverHandler->recorder);
+
+			// Wire it up
+			// connect(&*recorder, SIGNAL(recording_started()), this, SLOT(onRecorderStarted()));
+			connect(&*recorder, &VoiceRecorder::recording_stopped, [stoppedCallback]() {
+				// I couldn't compile when passing a void(*)(void) directly into toggleRecording...(),
+				// so I passed in a void* instead, then cast it. I was likely doing something wrong to cause
+				// the compiler errors, but I want to get something working right now and I don't have much time.
+				using void_function_ptr = void(*)(void);
+				reinterpret_cast<void_function_ptr>(stoppedCallback)();
+			});
+			// connect(&*recorder, SIGNAL(error(int, QString)), this, SLOT(onRecorderError(int, QString)));
+
+			recorder->start();
+		}
+		EXIT_WITH(MUMBLE_STATUS_OK);
+	} else {
+		EXIT_WITH(MUMBLE_EC_CONNECTION_NOT_FOUND);
+	}
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 /////////////////// C FUNCTION WRAPPERS FOR USE IN API STRUCT ///////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -1926,6 +2011,11 @@ C_WRAPPER(playSample_v_1_2_x)
 #undef TYPED_ARGS
 #undef ARG_NAMES
 
+#define TYPED_ARGS mumble_plugin_id_t callerID, const char* const folder, void* const stoppedCallback
+#define ARG_NAMES callerID, folder, stoppedCallback
+C_WRAPPER(toggleRecording_v_1_0_x)
+#undef TYPED_ARGS
+#undef ARG_NAMES
 
 #undef C_WRAPPER
 
@@ -1972,7 +2062,8 @@ MumbleAPI_v_1_0_x getMumbleAPI_v_1_0_x() {
 			 setMumbleSetting_string_v_1_0_x,
 			 sendData_v_1_0_x,
 			 log_v_1_0_x,
-			 playSample_v_1_0_x };
+			 playSample_v_1_0_x,
+			 toggleRecording_v_1_0_x };
 }
 
 MumbleAPI_v_1_2_x getMumbleAPI_v_1_2_x() {
@@ -2013,7 +2104,8 @@ MumbleAPI_v_1_2_x getMumbleAPI_v_1_2_x() {
 			 setMumbleSetting_string_v_1_0_x,
 			 sendData_v_1_0_x,
 			 log_v_1_0_x,
-			 playSample_v_1_2_x };
+			 playSample_v_1_2_x,
+			 toggleRecording_v_1_0_x };
 }
 
 #define MAP(qtName, apiName) \

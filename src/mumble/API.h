@@ -160,7 +160,8 @@ public slots:
 							std::shared_ptr< api_promise_t > promise);
 	void playSample_v_1_2_x(mumble_plugin_id_t callerID, const char *samplePath, float volume,
 							std::shared_ptr< api_promise_t > promise);
-
+	void toggleRecording_v_1_0_x(mumble_plugin_id_t callerID, const char* folder,
+	                             void* stoppedCallback, std::shared_ptr< api_promise_t > promise);
 
 private:
 	MumbleAPI();

@@ -1807,6 +1807,21 @@ struct MUMBLE_API_STRUCT_NAME {
 	 */
 	mumble_error_t(MUMBLE_PLUGIN_CALLING_CONVENTION *playSample)(mumble_plugin_id_t callerID,
 																 const char *samplePath PARAM_v1_2(float volume));
+
+	/**
+	 * Either starts or stops client voice recording, depending on if a recording is on-going or not.
+	 *
+	 * Recording files will be in the WAV format and will use `%user.wav` as the template for file names.
+	 * Recordings will not be sampled down.
+	 *
+	 * @param callerID The ID of the plugin calling this function.
+	 * @param[in] folder If a recording is starting; the folder to write recording files into.
+	 * @param[in] stoppedCallback If a recording is starting; a function with the signature void(void) that is
+	 *                            called when the recording is later stopped.
+	 */
+	mumble_error_t(MUMBLE_PLUGIN_CALLING_CONVENTION *toggleRecording)(mumble_plugin_id_t callerID,
+	                                                                  const char* folder,
+																	  void* stoppedCallback);
 };
 
 #	ifdef MUMBLE_PLUGIN_CREATE_MUMBLE_API_TYPEDEF
