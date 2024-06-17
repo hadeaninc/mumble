@@ -6,6 +6,8 @@
 
 cmake_minimum_required(VERSION 3.0)
 
+cmake_policy(SET CMP0069 NEW)
+
 set(version "1.0.0")
 
 project(VoiceCapturePlugin
@@ -26,7 +28,7 @@ set(all-features ON CACHE BOOL "" FORCE)
 # We need the wrapper as a dependency.
 add_subdirectory(../../mumble-plugin-cpp "${CMAKE_CURRENT_BINARY_DIR}/wrapper")
 
-add_library(voicecapture SHARED plugin.cpp)
+add_library(voiceCapture SHARED voiceCapture.cpp)
 
-target_include_directories(voicecapture PRIVATE ../../mumble-plugin-cpp/include)
-target_link_libraries(voicecapture PRIVATE mumble_plugin_cpp_wrapper)
+target_include_directories(voiceCapture PRIVATE ../../mumble-plugin-cpp/include)
+target_link_libraries(voiceCapture PRIVATE mumble_plugin_cpp_wrapper)

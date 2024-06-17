@@ -77,6 +77,7 @@ if(WIN32 OR (UNIX AND CMAKE_SYSTEM_NAME STREQUAL "Linux"))
 		"ut2004"
 		"ut3"
 		"ut99"
+		"voiceCapture"
 		"wolfet"
 		"wow"
 		"wow_x64"
