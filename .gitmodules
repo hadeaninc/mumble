@@ -31,3 +31,6 @@
 [submodule "3rdparty/flag-icons"]
 	path = 3rdparty/flag-icons
 	url = https://github.com/lipis/flag-icons.git
+[submodule "mumble-plugin-cpp"]
+	path = mumble-plugin-cpp
+	url = git@github.com:hadeaninc/mumble-plugin-cpp.git
