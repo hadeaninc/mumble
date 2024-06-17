@@ -40,7 +40,7 @@ private:
     std::unordered_map<mumble_userid_t, time_point> m_speakingUsers;
 public:
     VoiceCapturePlugin()
-        : MumblePlugin("Voice Capture", "Hadean",
+        : MumblePlugin("Hadean Voice Capture", "Hadean",
                        "This plugin records all incoming voice packets and redirects them to Hadean services that transcribe and store them.") {}
 
     // periodic() API start
