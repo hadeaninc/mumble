@@ -1649,7 +1649,7 @@ void MumbleAPI::playSample_v_1_2_x(mumble_plugin_id_t callerID, const char *samp
 }
 
 void MumbleAPI::toggleRecording_v_1_0_x(mumble_plugin_id_t callerID, const char* folder,
-										void* stoppedCallback,
+										void* stoppedCallback, void* userParam,
 										std::shared_ptr< api_promise_t > promise) {
 	if (QThread::currentThread() != thread()) {
 		// Invoke in main thread
@@ -1657,6 +1657,7 @@ void MumbleAPI::toggleRecording_v_1_0_x(mumble_plugin_id_t callerID, const char*
 								  Q_ARG(mumble_plugin_id_t, callerID),
 								  Q_ARG(const char*, folder),
 								  Q_ARG(void*, stoppedCallback),
+								  Q_ARG(void*, userParam),
 								  Q_ARG(std::shared_ptr< api_promise_t >, promise));
 
 		return;
@@ -1693,7 +1694,7 @@ void MumbleAPI::toggleRecording_v_1_0_x(mumble_plugin_id_t callerID, const char*
 			// Create the recorder
 			VoiceRecorder::Config config;
 			config.sampleRate      = static_cast< int >(ao->getMixerFreq());
-			config.fileName        = QDir(QString::fromStdString(folder)).absoluteFilePath("%user.wav");
+			config.fileName        = QDir(QString::fromStdString(folder)).absoluteFilePath("%id.wav");
 			config.mixDownMode     = false;
 			config.recordingFormat = VoiceRecorderFormat::WAV;
 
@@ -1715,12 +1716,12 @@ void MumbleAPI::toggleRecording_v_1_0_x(mumble_plugin_id_t callerID, const char*
 
 			// Wire it up
 			// connect(&*recorder, SIGNAL(recording_started()), this, SLOT(onRecorderStarted()));
-			connect(&*recorder, &VoiceRecorder::recording_stopped, [stoppedCallback]() {
-				// I couldn't compile when passing a void(*)(void) directly into toggleRecording...(),
+			connect(&*recorder, &VoiceRecorder::recording_stopped, [stoppedCallback, userParam]() {
+				// I couldn't compile when passing a void(*)(void*) directly into toggleRecording...(),
 				// so I passed in a void* instead, then cast it. I was likely doing something wrong to cause
 				// the compiler errors, but I want to get something working right now and I don't have much time.
-				using void_function_ptr = void(*)(void);
-				reinterpret_cast<void_function_ptr>(stoppedCallback)();
+				using function_ptr = void(*)(void*);
+				reinterpret_cast<function_ptr>(stoppedCallback)(userParam);
 			});
 			// connect(&*recorder, SIGNAL(error(int, QString)), this, SLOT(onRecorderError(int, QString)));
 
@@ -2011,8 +2012,8 @@ C_WRAPPER(playSample_v_1_2_x)
 #undef TYPED_ARGS
 #undef ARG_NAMES
 
-#define TYPED_ARGS mumble_plugin_id_t callerID, const char* const folder, void* const stoppedCallback
-#define ARG_NAMES callerID, folder, stoppedCallback
+#define TYPED_ARGS mumble_plugin_id_t callerID, const char* folder, void* stoppedCallback, void* userParam
+#define ARG_NAMES callerID, folder, stoppedCallback, userParam
 C_WRAPPER(toggleRecording_v_1_0_x)
 #undef TYPED_ARGS
 #undef ARG_NAMES

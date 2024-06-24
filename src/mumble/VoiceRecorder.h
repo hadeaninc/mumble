@@ -155,11 +155,14 @@ private:
 
 	/// Stores the recording state for one user.
 	struct RecordInfo {
-		RecordInfo(const QString &userName_);
+		RecordInfo(const QString &userName_, const unsigned int userID_);
 		~RecordInfo();
 
 		/// Name of the user being recorded
 		const QString userName;
+
+		/// ID of the user being recorded
+		const unsigned int userID = 0;
 
 		/// libsndfile's handle.
 		SNDFILE *soundFile;
@@ -173,8 +176,8 @@ private:
 	/// Removes invalid characters in a path component.
 	QString sanitizeFilenameOrPathComponent(const QString &str) const;
 
-	/// Expands the template variables in |path| for the given |userName|.
-	QString expandTemplateVariables(const QString &path, const QString &userName) const;
+	/// Expands the template variables in |path| for the given |userName| and |userID|.
+	QString expandTemplateVariables(const QString &path, const QString &userName, const unsigned int userID) const;
 
 	/// Returns the RecordInfo hashmap index for the given user
 	int indexForUser(const ClientUser *clientUser) const;

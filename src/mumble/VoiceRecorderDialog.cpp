@@ -43,12 +43,17 @@ VoiceRecorderDialog::VoiceRecorderDialog(QWidget *p) : QDialog(p), qtTimer(new Q
 											"    <td>%host</td>"
 											"    <td>%5</td>"
 											"  </tr>"
+											"  <tr>"
+											"    <td>%id</td>"
+											"    <td>%6</td>"
+											"  </tr>"
 											"</table>")
 							.arg(tr("Valid variables are:"))
 							.arg(tr("Inserts the user's name"))
 							.arg(tr("Inserts the current date"))
 							.arg(tr("Inserts the current time"))
-							.arg(tr("Inserts the hostname"));
+							.arg(tr("Inserts the hostname"))
+							.arg(tr("Inserts the user's ID"));
 
 	qleTargetDirectory->setToolTip(qsTooltip);
 	qleFilename->setToolTip(qsTooltip);

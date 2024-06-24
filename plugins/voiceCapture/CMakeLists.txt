@@ -28,7 +28,9 @@ set(all-features ON CACHE BOOL "" FORCE)
 # We need the wrapper as a dependency.
 add_subdirectory(../../mumble-plugin-cpp "${CMAKE_CURRENT_BINARY_DIR}/wrapper")
 
-add_library(voiceCapture SHARED voiceCapture.cpp)
+add_library(voiceCapture SHARED voiceCapture.cpp socket.cpp manager.cpp recordingProcessor.cpp)
 
-target_include_directories(voiceCapture PRIVATE ../../mumble-plugin-cpp/include)
+target_include_directories(voiceCapture PRIVATE
+	../../mumble-plugin-cpp/include
+	../../3rdparty/nlohmann_json/include)
 target_link_libraries(voiceCapture PRIVATE mumble_plugin_cpp_wrapper)

@@ -21,8 +21,8 @@ VoiceRecorder::RecordBuffer::RecordBuffer(int recordInfoIndex_, boost::shared_ar
 	// Nothing
 }
 
-VoiceRecorder::RecordInfo::RecordInfo(const QString &userName_)
-	: userName(userName_), soundFile(nullptr), lastWrittenAbsoluteSample(0) {
+VoiceRecorder::RecordInfo::RecordInfo(const QString &userName_, const unsigned int userID_)
+	: userName(userName_), userID(userID_), soundFile(nullptr), lastWrittenAbsoluteSample(0) {
 }
 
 VoiceRecorder::RecordInfo::~RecordInfo() {
@@ -83,7 +83,7 @@ QString VoiceRecorder::sanitizeFilenameOrPathComponent(const QString &str) const
 	return res;
 }
 
-QString VoiceRecorder::expandTemplateVariables(const QString &path, const QString &userName) const {
+QString VoiceRecorder::expandTemplateVariables(const QString &path, const QString &userName, const unsigned int userID) const {
 	// Split path into components
 	QString res;
 	QStringList comp = path.split(QLatin1Char('/'));
@@ -106,11 +106,13 @@ QString VoiceRecorder::expandTemplateVariables(const QString &path, const QStrin
 	//		%date		Inserts the current date
 	//		%time		Inserts the current time
 	//		%host		Inserts the hostname
+	//		%id			Inserts the user's ID
 	QHash< const QString, QString > vars;
 	vars.insert(QLatin1String("user"), userName);
 	vars.insert(QLatin1String("date"), date);
 	vars.insert(QLatin1String("time"), time);
 	vars.insert(QLatin1String("host"), hostname);
+	vars.insert(QLatin1String("id"), QString::number(userID));
 
 	// Reassemble and expand
 	bool first = true;
@@ -248,7 +250,7 @@ bool VoiceRecorder::ensureFileIsOpenedFor(SF_INFO &soundFileInfo, boost::shared_
 		return true;
 	}
 
-	QString filename = expandTemplateVariables(m_config.fileName, ri->userName);
+	QString filename = expandTemplateVariables(m_config.fileName, ri->userName, ri->userID);
 
 	// Try to find a unique filename.
 	{
@@ -413,7 +415,7 @@ void VoiceRecorder::addBuffer(const ClientUser *clientUser, boost::shared_array<
 
 	if (!m_recordInfo.contains(index)) {
 		boost::shared_ptr< RecordInfo > ri =
-			boost::make_shared< RecordInfo >(m_config.mixDownMode ? QLatin1String("Mixdown") : clientUser->qsName);
+			boost::make_shared< RecordInfo >(m_config.mixDownMode ? QLatin1String("Mixdown") : clientUser->qsName, clientUser->uiSession);
 
 		m_recordInfo.insert(index, ri);
 	}
