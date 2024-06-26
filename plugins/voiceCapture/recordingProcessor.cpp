@@ -121,6 +121,8 @@ void RecordingProcessor::process() {
             }
 
             // 4. Send each chunk.
+            const auto host = m_manager->getHost();
+            const auto port = m_manager->getPort();
             const auto topic = m_manager->getChatTopic();
             const auto fileID = m_fileCounter++;
             std::size_t chunkID = 0;
@@ -139,8 +141,8 @@ void RecordingProcessor::process() {
                         "&elapsed=" << *tickData->elapsed;
                 }
                 HTTPRequest{HTTPRequest::Data{
-                    .host = HOST,
-                    .port = PORT,
+                    .host = host,
+                    .port = port,
                     .method = HTTPRequest::Data::Method::POST,
                     .url = urlBuilder.str(),
                     .contentType = HTTPRequest::Data::ContentType::RAW,

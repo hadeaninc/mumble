@@ -1,5 +1,6 @@
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <mutex>
 #include <string>
@@ -14,8 +15,7 @@
 
 #pragma once
 
-#define HOST "localhost"
-#define PORT 8080
+#define JSON_CONFIG "./voiceCapture.json"
 #define LOCK(m) const std::lock_guard<std::mutex> lock(m)
 #define LOCK2(m, n) const std::lock_guard<std::mutex> lock1(m); const std::lock_guard<std::mutex> lock2(n)
 
@@ -24,6 +24,7 @@ class Manager {
     std::atomic_bool m_exitSignal = false;
     std::atomic_bool m_recordingStoppedSignal = false;
     ToggleRecordingCallback m_toggleRecording;
+    std::vector<RecordingProcessor> m_recordingProcessors;
     void periodic();
     static constexpr std::chrono::milliseconds USER_SPEAKING_TIMEOUT{100};
     void areUsersStillTalking();
@@ -36,8 +37,15 @@ public:
     ~Manager() noexcept;
 
 private:
-    std::vector<RecordingProcessor> m_recordingProcessors;
+    mutable std::mutex m_hostMutex;
+    std::string m_host = "localhost";
+    mutable std::mutex m_portMutex;
+    std::uint16_t m_port = 8080;
 public:
+    void setHost(const std::string& newHost);
+    void setPort(const std::uint16_t newPort);
+    std::string getHost() const;
+    std::uint16_t getPort() const;
 
 private:
     mutable std::mutex m_topicMutex;

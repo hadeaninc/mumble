@@ -4,14 +4,41 @@
 
 #include <cassert>
 #include <chrono>
+#include <exception>
+#include <fstream>
 #include <memory>
 #include <mutex>
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <thread>
 
 Manager::Manager(const ToggleRecordingCallback& recordingCallback) :
     m_manager(&Manager::periodic, this),
-    m_toggleRecording(recordingCallback) {}
+    m_toggleRecording(recordingCallback) {
+    // Try to initialise host and port now from JSON config file.
+    const auto defaultHost = getHost();
+    const auto defaultPort = getPort();
+    try {
+        nlohmann::json json;
+        {
+            std::ifstream jsonFile(JSON_CONFIG);
+            json = nlohmann::json::parse(jsonFile);
+        }
+        try {
+            setHost(json.at("host"));
+        } catch (const std::exception& e) {
+            LOG("Setting default host " << defaultHost << ": " << e.what());
+        }
+        try {
+            setPort(json.at("port"));
+        } catch (const std::exception& e) {
+            LOG("Setting default port " << defaultPort << ": " << e.what());
+        }
+    } catch (const std::exception& e) {
+        LOG("Couldn't load host or port from \"" << JSON_CONFIG << "\", leaving to defaults " <<
+            defaultHost << " and " << defaultPort << ": " << e.what());
+    }
+}
 
 Manager::~Manager() noexcept {
     m_exitSignal = true;
@@ -95,6 +122,28 @@ std::vector<std::filesystem::path> Manager::scanForAudioFiles() const {
     return files;
 }
 
+void Manager::setHost(const std::string& newHost) {
+    LOCK(m_hostMutex);
+    m_host = newHost;
+    LOG("Setting host to " << newHost);
+}
+
+void Manager::setPort(const std::uint16_t newPort) {
+    LOCK(m_portMutex);
+    m_port = newPort;
+    LOG("Setting port to " << newPort);
+}
+
+std::string Manager::getHost() const {
+    LOCK(m_hostMutex);
+    return m_host;
+}
+
+std::uint16_t Manager::getPort() const {
+    LOCK(m_portMutex);
+    return m_port;
+}
+
 std::string Manager::_sanitiseString(const std::string& str) {
     std::string finalString;
     finalString.reserve(SANITIZED_STRING_LIMIT);
@@ -138,8 +187,8 @@ void Manager::userHasJustSpoken(const mumble_userid_t userID) {
         m_userTickMap[userID].username = m_userMap[userID].username;
         m_userTickMap[userID].tickDataRequest = std::make_unique<HTTPRequestThread>(HTTPRequestThread::Data{
             .request = {
-                .host = HOST,
-                .port = PORT,
+                .host = getHost(),
+                .port = getPort(),
                 .method = HTTPRequest::Data::Method::GET,
                 .url = "/replay/tick",
                 .contentType = HTTPRequest::Data::ContentType::TEXT
