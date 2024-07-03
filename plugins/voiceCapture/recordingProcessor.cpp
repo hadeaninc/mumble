@@ -120,26 +120,30 @@ void RecordingProcessor::process() {
                 // due to the final chunk being < CHUNK_SIZE.
             }
 
-            // 4. Send each chunk.
+            // 4. Allocate file on the Hadean webserver.
             const auto host = m_manager->getHost();
             const auto port = m_manager->getPort();
-            const auto topic = m_manager->getChatTopic();
-            const auto fileID = m_fileCounter++;
-            std::size_t chunkID = 0;
             const auto chunkCount = audioChunks.size();
+            std::string fileID;
+            {
+                std::stringstream urlBuilder;
+                urlBuilder << "/createFile/" << chunkCount;
+                const auto jsonStr = HTTPRequest{HTTPRequest::Data{
+                    .host = host,
+                    .port = port,
+                    .method = HTTPRequest::Data::Method::PUT,
+                    .url = urlBuilder.str(),
+                    .contentType = HTTPRequest::Data::ContentType::TEXT,
+                    .body = nullptr
+                }}.send();
+                fileID = nlohmann::json::parse(jsonStr).at("fileId");
+            }
+
+            // 5. Send each chunk.
+            std::size_t chunkID = 0;
             for (const auto& audioChunk : audioChunks) {
                 std::stringstream urlBuilder;
-                urlBuilder << "/chat/sendAudioChunk/from" <<
-                    "/" << username <<
-                    "/" << topic <<
-                    "/" << fileID <<
-                    "/wav" <<
-                    "/" << chunkID++ <<
-                    "/" << chunkCount;
-                if (tickData->tickID && tickData->elapsed) {
-                    urlBuilder << "?tickId=" << *tickData->tickID <<
-                        "&elapsed=" << *tickData->elapsed;
-                }
+                urlBuilder << "/fileChunk/" << fileID << "/" << chunkID++;
                 HTTPRequest{HTTPRequest::Data{
                     .host = host,
                     .port = port,
@@ -150,12 +154,41 @@ void RecordingProcessor::process() {
                 }}.send(); // Ignore response.
             }
 
-            // 5. Assume successful send, now attempt to delete the audio file.
+            // 6. Send chat message using audio file.
+            const auto topic = m_manager->getChatTopic();
+            {
+                std::stringstream urlBuilder;
+                urlBuilder << "/chat/sendTranscribedAudioFile/from" <<
+                    "/" << username <<
+                    "/" << topic <<
+                    "/" << fileID <<
+                    "/wav";
+                if (tickData->tickID && tickData->elapsed) {
+                    urlBuilder << "?tickId=" << *tickData->tickID <<
+                        "&elapsed=" << *tickData->elapsed;
+                }
+                const auto err = HTTPRequest{HTTPRequest::Data{
+                    .host = host,
+                    .port = port,
+                    .method = HTTPRequest::Data::Method::POST,
+                    .url = urlBuilder.str(),
+                    .contentType = HTTPRequest::Data::ContentType::TEXT,
+                    .body = nullptr
+                }}.send();
+                // If the chat couldn't be sent, just log the error for now.
+                // The audio file could be faulty in some way and we don't
+                // want to keep endlessly sending it in this case.
+                if (!err.empty()) {
+                    LOG("Failed to make chat message using file " << file << ": " << err);
+                }
+            }
+
+            // 7. Assume successful send, now attempt to delete the audio file.
             m_manager->removeCachedUserTickData(file);
             ++successfulSends;
             deleteFile(file);
         } catch (const std::exception& e) {
-            LOG("Failed to send file \"" << file << "\", will not delete it until it can be sent: " <<
+            LOG("Failed to send file " << file << ", will not delete it until it can be sent: " <<
                 e.what());
             if (tickData) { m_manager->setCachedUserTickData(file, *tickData); }
         }

@@ -15,7 +15,8 @@ public:
         std::uint16_t port;
         enum class Method {
             GET,
-            POST
+            POST,
+            PUT
         } method;
         std::string url;
         enum class ContentType {

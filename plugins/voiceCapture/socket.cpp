@@ -62,6 +62,9 @@ std::string HTTPRequest::send() {
     case Data::Method::POST:
         requestBuilder << "POST ";
         break;
+    case Data::Method::PUT:
+        requestBuilder << "PUT ";
+        break;
     default:
         throw request_exception("invalid HTTP method " +
             std::to_string(static_cast<int>(m_data.method)));
