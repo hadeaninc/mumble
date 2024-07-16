@@ -1,0 +1,326 @@
+{
+    "audio": {
+        "echo_cancel_mode": "Disabled",
+        "input_system": "PulseAudio",
+        "mute": true,
+        "mute_cue_popup_shown": true,
+        "output_system": "PulseAudio",
+        "play_mute_cue": false,
+        "vad_max": 0.9800103902816772,
+        "vad_min": 0.8000122308731079
+    },
+    "last_connection": {
+        "server_name": "~S",
+        "username": "~T"
+    },
+    "misc": {
+        "audio_wizard_has_been_shown": true,
+        "database_location": "~H/.local/share/Mumble/Mumble/mumble.sqlite",
+        "viewed_server_ping_consent_message": true
+    },
+    "mumble_has_quit_normally": true,
+    "network": {
+        "auto_connect_to_last_server": true,
+        "use_quality_of_service": false
+    },
+    "plugins": {
+        "0572a6d2704d84bf3b61a1e464324cbaca809904": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libut2004.so",
+            "positional_data_enabled": true
+        },
+        "0d04d32dd8d8141a247fd28f7ff3a8ccfc0a0b38": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libgtaiv.so",
+            "positional_data_enabled": true
+        },
+        "0e2a0f8807b8b80610db62f0ddcbffa8c8c4fb5a": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbreach.so",
+            "positional_data_enabled": true
+        },
+        "0f3c8f08ddbc6e100630bbe8a853c62e3ea86002": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libgmod.so",
+            "positional_data_enabled": true
+        },
+        "10f30324f402759ede4dcc8cf01be5a66a1be069": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/librl.so",
+            "positional_data_enabled": true
+        },
+        "13d1270c7752b91031ea39d5c6376808287846eb": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libcod4.so",
+            "positional_data_enabled": true
+        },
+        "1a34340e348b0b21ce8420e759e3b9fe712aad62": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libjc2.so",
+            "positional_data_enabled": true
+        },
+        "218a0192be826f8d6ae9d1235fcda94a6b9e61bf": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbf1942.so",
+            "positional_data_enabled": true
+        },
+        "2fe4eb7a3e63cea46afddeee0d1b34a608d55ac1": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libcodmw2so.so",
+            "positional_data_enabled": true
+        },
+        "3221b161e37539687285b33ebf5a33705afe6bee": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libborderlands2.so",
+            "positional_data_enabled": true
+        },
+        "38309f2091f015e52dc1805127136fabb1232020": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libffxiv_x64.so",
+            "positional_data_enabled": true
+        },
+        "3d6020f18464b5b9f6f7b2c96f6cea744dc258b7": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/liblotro.so",
+            "positional_data_enabled": true
+        },
+        "45c06ad31491aaddfddfad69ce8aba0d4b6efa0b": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbfbc2.so",
+            "positional_data_enabled": true
+        },
+        "45fd3041f563e2bc01514586bd5c1b7216812279": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libgtav.so",
+            "positional_data_enabled": true
+        },
+        "4bb7e9b0b153c1fc1c5e8d5bdf50eea000c9cb82": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libql.so",
+            "positional_data_enabled": true
+        },
+        "527e2601a502af6b246c939f81a78f9c3874fcc0": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbf4_x86.so",
+            "positional_data_enabled": true
+        },
+        "5488e4dba49172da87b47602911a0e7d466f949c": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libut3.so",
+            "positional_data_enabled": true
+        },
+        "558889480f73b47fa2403045065ad81973daec0a": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libwow_x64.so",
+            "positional_data_enabled": true
+        },
+        "5881ffe67364ab9a593b9ed88985291ddb803ce9": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libwow.so",
+            "positional_data_enabled": true
+        },
+        "5fa5da50052edf9135e30677fb493232c0d1c896": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libwolfet.so",
+            "positional_data_enabled": true
+        },
+        "658a75b3b04b1918e984a31a011bc6b350ae80fa": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libcs.so",
+            "positional_data_enabled": true
+        },
+        "747e015d77752b4088ba408ba202ccd3997a0408": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbf1.so",
+            "positional_data_enabled": true
+        },
+        "7a2a9e7d3db2434f5a023a4ff80156a88cbe16a1": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libut99.so",
+            "positional_data_enabled": true
+        },
+        "7ee7ca151e81071b310283219693f7ef9d98dc61": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libgtasa.so",
+            "positional_data_enabled": true
+        },
+        "7f8c892afa4c80befe3ca743fd8b56fa5e0b227e": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbf2142.so",
+            "positional_data_enabled": true
+        },
+        "827f6fecb74d44e193c76c6e1566bd148cc69785": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libetqw.so",
+            "positional_data_enabled": true
+        },
+        "877c2f0c949b97e5ae6485c828ce1f9ab69ad2fe": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libcodmw2.so",
+            "positional_data_enabled": true
+        },
+        "87b5c4cacb307f7e89f15012839e308aa02d9909": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libffxiv.so",
+            "positional_data_enabled": true
+        },
+        "8d285a33c55c2800317bafd13b32402b05a0e186": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libaoc.so",
+            "positional_data_enabled": true
+        },
+        "939553df8dee38cbac3874e05953fbefd2118254": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbfheroes.so",
+            "positional_data_enabled": true
+        },
+        "93ed2ce08ab60d1449b05bdc5020108be76a2341": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libgw.so",
+            "positional_data_enabled": true
+        },
+        "95fefa3a1422b6b8ed6bca36014727b2a6783d26": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libsr.so",
+            "positional_data_enabled": true
+        },
+        "99f53d8edd8cae3a8ceccb2d8438b9f0589f9a80": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/liblol.so",
+            "positional_data_enabled": true
+        },
+        "9e660b56040fd9171240d2b52d26995699df0f2a": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "manual.builtin",
+            "positional_data_enabled": true
+        },
+        "9edc8d6ec287a829df37ab10a82984c098eab7d6": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libdys.so",
+            "positional_data_enabled": true
+        },
+        "ab61b5e9fa6f959e18940c4e68fb0b6e11e680c7": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbf4.so",
+            "positional_data_enabled": true
+        },
+        "aca80e38c7bdbf767ace60acdb2635d69736d532": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libarma2.so",
+            "positional_data_enabled": true
+        },
+        "c5af8aa5547a7edacf19b3ef7a577d5f46e7baf2": {
+            "enabled": true,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libvoiceCapture.so",
+            "positional_data_enabled": false
+        },
+        "c70fea340f67bf742a1761220173aae44ec99016": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libamongus.so",
+            "positional_data_enabled": true
+        },
+        "cc5982525b5e911cacc81662afe2b97a96e876e3": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbf2.so",
+            "positional_data_enabled": true
+        },
+        "cc9fecffaf862ed51ab578bf5e499f31d8d9bbbd": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libinsurgency.so",
+            "positional_data_enabled": true
+        },
+        "e36a6de72525b2b343f4b1a9f2c9bd77788a172f": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/liblink.so",
+            "positional_data_enabled": true
+        },
+        "e9308512cc108531bdf3c6d55f900db583dc6ba8": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libbf3.so",
+            "positional_data_enabled": true
+        },
+        "edfceb9a2e6609c28ff5cd220949bace73f08615": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libcod5.so",
+            "positional_data_enabled": true
+        },
+        "f33d1a7e32da2c9b46bd10b49de244b34876f1da": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libse.so",
+            "positional_data_enabled": true
+        },
+        "f9e1dbe417285c2c2fee867d7033b9c28cd1032d": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libborderlands.so",
+            "positional_data_enabled": true
+        },
+        "fc230278317c9a97f41d25935c1a65fbf456b36c": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libblacklight.so",
+            "positional_data_enabled": true
+        },
+        "fc42a76736a1acc6cd6f0cb1bc33b77ff270071d": {
+            "enabled": false,
+            "keyboard_monitoring_allowed": false,
+            "path": "~C/build/plugins/libcod2.so",
+            "positional_data_enabled": true
+        }
+    },
+    "settings_version": 1,
+    "ui": {
+        "disable_public_server_list": true,
+        "quit_behavior": "AlwaysQuit",
+        "send_usage_statistics": false
+    },
+    "update": {
+        "check_for_plugin_updates": false,
+        "check_for_updates": false
+    }
+}
