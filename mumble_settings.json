@@ -20,7 +20,7 @@
     },
     "mumble_has_quit_normally": true,
     "network": {
-        "auto_connect_to_last_server": true,
+        "auto_connect_to_last_server": ~L,
         "use_quality_of_service": false
     },
     "plugins": {
