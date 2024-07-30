@@ -74,7 +74,6 @@ void recordingHasStopped(void* userParam) {
 }
 
 void Manager::toggleRecordingIfNecessary(bool& aUserWasSpeaking) {
-    LOG("BEFORE: aUserWasSpeaking " << std::boolalpha << aUserWasSpeaking << " ; nowAUserIsSpeaking " << aUserWasSpeaking);
     const auto nowAUserIsSpeaking = isAUserSpeaking();
     if ((!aUserWasSpeaking && nowAUserIsSpeaking) ||
         (aUserWasSpeaking && !nowAUserIsSpeaking)) {
@@ -84,7 +83,6 @@ void Manager::toggleRecordingIfNecessary(bool& aUserWasSpeaking) {
         );
     }
     aUserWasSpeaking = nowAUserIsSpeaking;
-    LOG(" AFTER: aUserWasSpeaking " << std::boolalpha << aUserWasSpeaking << " ; nowAUserIsSpeaking " << aUserWasSpeaking);
 }
 
 void Manager::pushRecordingsIfAvailable() {
