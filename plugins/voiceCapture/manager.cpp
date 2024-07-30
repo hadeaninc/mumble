@@ -64,6 +64,7 @@ void Manager::areUsersStillTalking() {
     for (auto& user : m_userMap) {
         if (!user.second.isSpeaking) { continue; }
         if (now - user.second.lastSpokeAt < USER_SPEAKING_TIMEOUT) { continue; }
+        LOG("User with ID " << user.first << " (username " << user.second.username << ") has now STOPPED SPEAKING");
         user.second.isSpeaking = false;
     }
 }
@@ -73,6 +74,7 @@ void recordingHasStopped(void* userParam) {
 }
 
 void Manager::toggleRecordingIfNecessary(bool& aUserWasSpeaking) {
+    LOG("BEFORE: aUserWasSpeaking " << std::boolalpha << aUserWasSpeaking << " ; nowAUserIsSpeaking " << aUserWasSpeaking);
     const auto nowAUserIsSpeaking = isAUserSpeaking();
     if ((!aUserWasSpeaking && nowAUserIsSpeaking) ||
         (aUserWasSpeaking && !nowAUserIsSpeaking)) {
@@ -82,6 +84,7 @@ void Manager::toggleRecordingIfNecessary(bool& aUserWasSpeaking) {
         );
     }
     aUserWasSpeaking = nowAUserIsSpeaking;
+    LOG(" AFTER: aUserWasSpeaking " << std::boolalpha << aUserWasSpeaking << " ; nowAUserIsSpeaking " << aUserWasSpeaking);
 }
 
 void Manager::pushRecordingsIfAvailable() {
@@ -176,6 +179,7 @@ void Manager::setUserName(const mumble_userid_t userID, const std::string& usern
 
 void Manager::userHasJustSpoken(const mumble_userid_t userID) {
     LOCK2(m_userMapMutex, m_userTickMapMutex);
+    LOG("User with ID " << userID << " (username " << m_userMap[userID].username << ") is now SPEAKING");
     m_userMap[userID].lastSpokeAt = ::now();
     m_userMap[userID].isSpeaking = true;
     if (m_userTickMap.find(userID) == m_userTickMap.end()) {
@@ -201,7 +205,10 @@ void Manager::userHasJustSpoken(const mumble_userid_t userID) {
 bool Manager::isAUserSpeaking() const {
     LOCK(m_userMapMutex);
     for (const auto& user : m_userMap) {
-        if (user.second.isSpeaking) { return true; }
+        if (user.second.isSpeaking) {
+            LOG("User " << user.first << " (username " << user.second.username << ") is STILL SPEAKING");
+            return true;
+        }
     }
     return false;
 }
