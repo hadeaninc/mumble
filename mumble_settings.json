@@ -4,6 +4,7 @@
         "input_system": "PulseAudio",
         "mute": true,
         "mute_cue_popup_shown": true,
+        "output_delay": 10,
         "output_system": "PulseAudio",
         "play_mute_cue": false,
         "vad_max": 0.9800103902816772,
