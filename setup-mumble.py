@@ -30,13 +30,17 @@ parser.add_argument("-s", "--mumble-server",
                     "Mumble server to automatically connect to on launch. "
                     "Has no effect without the --enable-auto-connect option")
 parser.add_argument("-t", "--topic-name", "--topic", "--username",
-                    default="BLUEFOR",
+                    default="BLUFOR",
                     help="Transcribed radio messages will be posted to the "
                     "Hadean services as chats under this topic. "
                     "Has no effect without the --enable-auto-connect option")
 parser.add_argument("--skip-dependencies",
                     action="store_true",
                     help="Skip installing build dependencies")
+parser.add_argument("--skip-cmake",
+                    action="store_true",
+                    help="If _not_ skipping the build: just skip the CMake "
+                    "step.")
 parser.add_argument("--skip-build",
                     action="store_true",
                     help="Skip building the client and server")
@@ -77,7 +81,8 @@ Path("build").mkdir(exist_ok=True)
 if args.skip_build:
     print("Skipping build step")
 else:
-    run_command("cmake ..", cwd="build")
+    if not args.skip_cmake:
+        run_command("cmake ..", cwd="build")
     run_command("make -j 12", cwd="build")
 
 

@@ -12,12 +12,14 @@
 #include "socket.hpp"
 
 #include "mumble/plugin/internal/PluginComponents_v_1_0_x.h"
+#include <unordered_set>
 
 #pragma once
 
 #define JSON_CONFIG "./voiceCapture.json"
-#define LOCK(m) const std::lock_guard<std::mutex> lock(m)
-#define LOCK2(m, n) const std::lock_guard<std::mutex> lock1(m); const std::lock_guard<std::mutex> lock2(n)
+#define LOCK(m) try { const std::lock_guard<std::mutex> lock(m); } catch (const std::exception& e) { \
+    LOG("CRITICAL! COULD NOT LOCK " << #m << ", BAD THINGS WILL HAPPEN... " << e.what()); }
+#define LOCK2(m, n) LOCK(m); LOCK(n)
 
 class Manager {
     std::thread m_manager;
@@ -30,7 +32,7 @@ class Manager {
     void areUsersStillTalking();
     void toggleRecordingIfNecessary(bool& aUserWasSpeaking);
     void pushRecordingsIfAvailable();
-    std::vector<std::filesystem::path> scanForAudioFiles() const;
+    std::vector<std::filesystem::path> scanForAudioFiles();
     friend void recordingHasStopped(void* userParam);
 public:
     Manager(const ToggleRecordingCallback& recordingCallback);
@@ -52,7 +54,7 @@ private:
     std::string m_topic = "RADIO";
     static constexpr std::size_t SANITIZED_STRING_LIMIT{100};
     // Ensures a string is safe for use within a URL.
-    static std::string _sanitiseString(const std::string& str);
+    static std::string sanitiseString(const std::string& str);
 public:
     void setChatTopic(const std::string& topic);
     std::string getChatTopic() const;
@@ -66,8 +68,6 @@ private:
     UserDataMap m_userMap;
     mutable std::mutex m_userTickMapMutex;
     UserTickDataRequestMap m_userTickMap;
-    // Protected by m_userTickMapMutex.
-    std::size_t m_audioFileCounter = 0;
 public:
     void setUserName(const mumble_userid_t userID, const std::string& username);
     void userHasJustSpoken(const mumble_userid_t userID);
@@ -82,4 +82,17 @@ public:
     void setCachedUserTickData(const std::string& filepath, const UserTickData& data);
     std::optional<UserTickData> getCachedUserTickData(const std::string& filepath) const;
     void removeCachedUserTickData(const std::string& filepath);
+
+private:
+    mutable std::mutex m_recordingFolderMutex;
+    // This deque will be ordered by date generated. This means that the last item in
+    // the deque *should* be the most recent recording.
+    RecordingFolderDataVector m_recordingFolders;
+    // No need for these fields to be protected as they're only touched in one code path.
+    std::size_t m_recordingFolderCounter = 0;
+    bool m_generateNewRecordingFolderName = true;
+    std::filesystem::path generateNewRecordingFolderName();
+    std::vector<std::filesystem::path> getRecordingFoldersToScan();
+public:
+    void recordingProcessingHasFinished(const std::vector<std::filesystem::path>& folders);
 };

@@ -18,11 +18,9 @@
 
 RecordingProcessor::RecordingProcessor(Manager* const manager,
                                        const std::vector<std::filesystem::path>& files,
-                                       UserTickDataRequestMap* const userTickMap,
-                                       const std::size_t fileCounter) :
+                                       UserTickDataRequestMap* const userTickMap) :
     m_manager(manager),
-    m_files(files),
-    m_fileCounter(fileCounter) {
+    m_files(files) {
     assert(m_manager);
     m_userTickMap.merge(*userTickMap);
     assert(!m_userTickMap.empty());
@@ -66,7 +64,14 @@ void RecordingProcessor::process() {
         (m_files.size() == 1 ? "" : "s") << " to Hadean services");
     std::size_t successfulSends = 0;
     for (const auto& file : m_files) {
-        // 1. Extract user ID from file name.
+        // 1. Keep track of the recording folders we're currently processing.
+        if (std::find(m_recordingFolders.begin(),
+                      m_recordingFolders.end(),
+                      file.parent_path()) == m_recordingFolders.end()) {
+            m_recordingFolders.push_back(file.parent_path());
+        }
+
+        // 2. Extract user ID from file name.
         mumble_userid_t userID = 0;
         std::string username;
         try {
@@ -77,13 +82,13 @@ void RecordingProcessor::process() {
         } catch (const std::exception& e) {
             // If a user ID can't be extracted from the file, or it wasn't a valid user ID,
             // try to delete the file straight away, i.e. ignore it.
-            LOG("Failed to extract user ID from file \"" << file << "\" (file will be deleted): " <<
+            LOG("Failed to extract user ID from file " << file << " (file will be deleted): " <<
                 e.what());
             deleteFile(file);
             continue;
         }
 
-        // 2. If this file has cached tick data associated with it, use that instead of
+        // 3. If this file has cached tick data associated with it, use that instead of
         //    the incoming tick data, as that will be for the newest file and not for a
         //    file that previously failed to send to the webserver.
         //    Otherwise, wait for the user's new tick data to arrive.
@@ -99,7 +104,7 @@ void RecordingProcessor::process() {
                     tickData->tickID << ", elapsed=" << tickData->elapsed);
             }
 
-            // 3. Chunk up the audio file.
+            // 4. Chunk up the audio file.
             const auto audioFileSize = std::filesystem::file_size(file);
             // Our Express Node.js webserver is automatically configured with a limit of 100KB
             // since it uses the body-parser middleware.
@@ -120,7 +125,7 @@ void RecordingProcessor::process() {
                 // due to the final chunk being < CHUNK_SIZE.
             }
 
-            // 4. Allocate file on the Hadean webserver.
+            // 5. Allocate file on the Hadean webserver.
             const auto host = m_manager->getHost();
             const auto port = m_manager->getPort();
             const auto chunkCount = audioChunks.size();
@@ -139,7 +144,7 @@ void RecordingProcessor::process() {
                 fileID = nlohmann::json::parse(jsonStr).at("fileId");
             }
 
-            // 5. Send each chunk.
+            // 6. Send each chunk.
             std::size_t chunkID = 0;
             for (const auto& audioChunk : audioChunks) {
                 std::stringstream urlBuilder;
@@ -154,7 +159,7 @@ void RecordingProcessor::process() {
                 }}.send(); // Ignore response.
             }
 
-            // 6. Send chat message using audio file.
+            // 7. Send chat message using audio file.
             const auto topic = m_manager->getChatTopic();
             {
                 std::stringstream urlBuilder;
@@ -176,14 +181,14 @@ void RecordingProcessor::process() {
                     .body = nullptr
                 }}.send();
                 // If the chat couldn't be sent, just log the error for now.
-                // The audio file could be faulty in some way and we don't
-                // want to keep endlessly sending it in this case.
+                // The audio file could be faulty in some way though, and we
+                // don't want to keep endlessly sending it in this case :/
                 if (!err.empty()) {
                     LOG("Failed to make chat message using file " << file << ": " << err);
                 }
             }
 
-            // 7. Assume successful send, now attempt to delete the audio file.
+            // 8. Assume successful send, now attempt to delete the audio file.
             m_manager->removeCachedUserTickData(file);
             ++successfulSends;
             deleteFile(file);
@@ -194,5 +199,7 @@ void RecordingProcessor::process() {
         }
     }
     LOG("Successfully sent " << successfulSends << " file" << (successfulSends == 1 ? "" : "s") <<
-        " for transcription");
+        " for transcription from " << m_recordingFolders.size() << " folder" <<
+        (m_recordingFolders.size() == 1 ? "" : "s"));
+    m_manager->recordingProcessingHasFinished(m_recordingFolders);
 }

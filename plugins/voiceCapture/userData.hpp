@@ -10,14 +10,9 @@
 
 #pragma once
 
-using ToggleRecordingCallback = std::function<void(void*, void*)>;
+using ToggleRecordingCallback = std::function<void(const char*, void*, void*)>;
 using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
 inline TimePoint now() { return std::chrono::steady_clock::now(); }
-// This will mean that a "voice" folder is created within the directory that the
-// Observer Client was run from, and WAV files will be written into this folder.
-static const std::filesystem::path WAV_FOLDER{
-    std::filesystem::current_path() / "voice"
-};
 
 struct UserData {
     std::string username;
@@ -35,3 +30,14 @@ struct UserTickDataRequest {
     std::unique_ptr<HTTPRequestThread> tickDataRequest;
 };
 using UserTickDataRequestMap = std::unordered_map<mumble_userid_t, UserTickDataRequest>;
+
+struct RecordingFolderData {
+    std::filesystem::path recordingFolder;
+    enum class State {
+        Recording,
+        Processing,
+        FinishedProcessingUnsuccessfully,
+        FinishedProcessingSuccessfully
+    } state = State::Recording;
+};
+using RecordingFolderDataVector = std::vector<RecordingFolderData>;

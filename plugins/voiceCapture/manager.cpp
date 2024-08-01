@@ -1,13 +1,14 @@
 #include "manager.hpp"
 #include "log.hpp"
-#include "socket.hpp"
 
+#include "userData.hpp"
 #include <cassert>
 #include <chrono>
 #include <exception>
+#include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <memory>
-#include <mutex>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <thread>
@@ -77,7 +78,13 @@ void Manager::toggleRecordingIfNecessary(bool& aUserWasSpeaking) {
     const auto nowAUserIsSpeaking = isAUserSpeaking();
     if ((!aUserWasSpeaking && nowAUserIsSpeaking) ||
         (aUserWasSpeaking && !nowAUserIsSpeaking)) {
+        // We only want to generate a new folder name every other time,
+        // since this is a recording toggle. When a recording stops,
+        // the API doesn't use the folder name parameter anyway.
+        const std::string newFolder = (m_generateNewRecordingFolderName ? generateNewRecordingFolderName() : "");
+        m_generateNewRecordingFolderName = !m_generateNewRecordingFolderName;
         m_toggleRecording(
+            newFolder.c_str(),
             reinterpret_cast<void*>(this),
             reinterpret_cast<void*>(&recordingHasStopped)
         );
@@ -98,27 +105,29 @@ void Manager::pushRecordingsIfAvailable() {
         // and we mustn't block the manager to do so or else it might miss opportunities to record voice data.
         LOCK(m_userTickMapMutex);
         const auto audioFiles = scanForAudioFiles();
-        m_recordingProcessors.emplace_back(this, audioFiles, &m_userTickMap,
-            m_audioFileCounter += audioFiles.size());
+        m_recordingProcessors.emplace_back(this, audioFiles, &m_userTickMap);
         // NOTE: m_userTickMap is now EMPTY as its contents has been moved into the recording processor thread.
         assert(m_userTickMap.empty());
     }
 }
 
-std::vector<std::filesystem::path> Manager::scanForAudioFiles() const {
+std::vector<std::filesystem::path> Manager::scanForAudioFiles() {
     std::vector<std::filesystem::path> files;
-    try {
-        std::filesystem::directory_iterator itr{WAV_FOLDER};
-        std::copy_if(std::filesystem::begin(itr),
-                     std::filesystem::end(itr),
-                     std::back_inserter(files),
-                     [](const std::filesystem::directory_entry& entry) {
-                         return entry.is_regular_file() && entry.path().extension().string() == ".wav";
-                     }
-        );
-    } catch (const std::exception& e) {
-        LOG("Failed to fully scan " << WAV_FOLDER << " directory: " << e.what());
-        return files;
+    const auto foldersToScan = getRecordingFoldersToScan();
+    for (const auto& folder : foldersToScan) {
+        LOG("Scanning directory " << folder);
+        try {
+            std::filesystem::directory_iterator itr{folder};
+            std::copy_if(std::filesystem::begin(itr),
+                         std::filesystem::end(itr),
+                         std::back_inserter(files),
+                         [](const std::filesystem::directory_entry& entry) {
+                             return entry.is_regular_file() && entry.path().extension().string() == ".wav";
+                         }
+            );
+        } catch (const std::exception& e) {
+            LOG("Failed to fully scan " << folder << " directory: " << e.what());
+        }
     }
     return files;
 }
@@ -145,7 +154,7 @@ std::uint16_t Manager::getPort() const {
     return m_port;
 }
 
-std::string Manager::_sanitiseString(const std::string& str) {
+std::string Manager::sanitiseString(const std::string& str) {
     std::string finalString;
     finalString.reserve(SANITIZED_STRING_LIMIT);
     for (const auto& chr : str) {
@@ -160,7 +169,7 @@ std::string Manager::_sanitiseString(const std::string& str) {
 void Manager::setChatTopic(const std::string& topic) {
     LOCK(m_topicMutex);
     const auto oldTopic = m_topic;
-    m_topic = _sanitiseString(topic);
+    m_topic = sanitiseString(topic);
     LOG("Chat topic updated from \"" << oldTopic << "\" to \"" << m_topic << "\"");
 }
 
@@ -177,7 +186,6 @@ void Manager::setUserName(const mumble_userid_t userID, const std::string& usern
 
 void Manager::userHasJustSpoken(const mumble_userid_t userID) {
     LOCK2(m_userMapMutex, m_userTickMapMutex);
-    LOG("User with ID " << userID << " (username " << m_userMap[userID].username << ") is now SPEAKING");
     m_userMap[userID].lastSpokeAt = ::now();
     m_userMap[userID].isSpeaking = true;
     if (m_userTickMap.find(userID) == m_userTickMap.end()) {
@@ -186,6 +194,7 @@ void Manager::userHasJustSpoken(const mumble_userid_t userID) {
         //       If users adhere to correct radio protocol though, this lack of robustness should not
         //       be an issue, as recordings are likely to start and stop when a single user speaks a
         //       single sentence or paragraph.
+        LOG("User with ID " << userID << " (username " << m_userMap[userID].username << ") is now SPEAKING");
         m_userTickMap[userID].username = m_userMap[userID].username;
         m_userTickMap[userID].tickDataRequest = std::make_unique<HTTPRequestThread>(HTTPRequestThread::Data{
             .request = {
@@ -204,7 +213,6 @@ bool Manager::isAUserSpeaking() const {
     LOCK(m_userMapMutex);
     for (const auto& user : m_userMap) {
         if (user.second.isSpeaking) {
-            LOG("User " << user.first << " (username " << user.second.username << ") is STILL SPEAKING");
             return true;
         }
     }
@@ -226,4 +234,92 @@ std::optional<UserTickData> Manager::getCachedUserTickData(const std::string& fi
 void Manager::removeCachedUserTickData(const std::string& filepath) {
     LOCK(m_userTickCacheMutex);
     m_userTickCache.erase(filepath);
+}
+
+std::filesystem::path Manager::generateNewRecordingFolderName() {
+    const auto newFolder = std::filesystem::current_path() / ("voice" +
+        std::to_string(m_recordingFolderCounter++));
+    // If the folder already exists, delete it. This ensures that this run doesn't include
+    // stray audio files from a previous run.
+    try {
+        if (std::filesystem::exists(newFolder)) {
+            try {
+                std::filesystem::remove_all(newFolder);
+            } catch (const std::exception& e) {
+                LOG("WARNING: could not delete existing file/folder " << newFolder <<
+                    ", old audio recordings may be sent as part of this transcription! " <<
+                    e.what());
+            }
+        }
+    } catch (const std::exception& e) {
+        LOG("WARNING: could not discover if file/folder " << newFolder << "currently exists: "
+            "old audio recordings may be sent as part of this transcription, or recording may fail! " <<
+            e.what());
+    }
+    LOCK(m_recordingFolderMutex);
+    m_recordingFolders.push_back(RecordingFolderData{
+        .recordingFolder = newFolder,
+        .state = RecordingFolderData::State::Recording
+    });
+    return newFolder;
+}
+
+std::vector<std::filesystem::path> Manager::getRecordingFoldersToScan() {
+    LOCK(m_recordingFolderMutex);
+    std::vector<std::filesystem::path> recordingFoldersToScan;
+    for (auto itr = m_recordingFolders.begin(); itr != m_recordingFolders.end();) {
+        if (itr->state == RecordingFolderData::State::Processing) {
+            // Do not scan folders that are currently processing: we don't want to process them twice!
+            // We do include FinishedProcessingUnsuccessfully items, however, as they will include
+            // recordings that failed to be sent the first time.
+            ++itr;
+            continue;
+        } else if (itr->state == RecordingFolderData::State::FinishedProcessingSuccessfully) {
+            itr = m_recordingFolders.erase(itr);
+            continue;
+        } else {
+            // We're going to process the files [again], so mark the folder as Processing.
+            itr->state = RecordingFolderData::State::Processing;
+        }
+        recordingFoldersToScan.push_back(itr->recordingFolder);
+        ++itr;
+    }
+    return recordingFoldersToScan;
+}
+
+void Manager::recordingProcessingHasFinished(const std::vector<std::filesystem::path>& folders) {
+    LOCK(m_recordingFolderMutex);
+    for (const auto& folder : folders) {
+        for (auto& recordingFolder : m_recordingFolders) {
+            if (recordingFolder.recordingFolder != folder) { continue; }
+            // A recording processor has [attempted to] push at least one recording file from this folder.
+            // Find out if it was successful by counting the number of files within the folder.
+            // If it's zero, delete the entry from the deque.
+            // If it's non-zero, leave the deque entry so that future scans will include this folder.
+            recordingFolder.state = RecordingFolderData::State::FinishedProcessingUnsuccessfully;
+            try {
+                const auto fileCount = std::distance(
+                    std::filesystem::directory_iterator{folder},
+                    std::filesystem::directory_iterator{}
+                );
+                if (fileCount == 0) {
+                    try {
+                        std::filesystem::remove_all(folder);
+                        recordingFolder.state = RecordingFolderData::State::FinishedProcessingSuccessfully;
+                    } catch (const std::exception& e) {
+                        LOG("WARNING: could not delete recording folder " << folder << ", "
+                            "its audio files will be sent for transcription again when the "
+                            "next recording finishes!");
+                    }
+                } else {
+                    LOG("WARNING: failed to send some recordings from folder " << folder << ", "
+                        "will not delete the folder");
+                }
+            } catch (const std::exception& e) {
+                LOG("WARNING: could not count number of files within folder " << folder << ", "
+                    "will attempt to resend any files within this folder once the next "
+                    "recording has finished");
+            }
+        }
+    }
 }

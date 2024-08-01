@@ -22,6 +22,7 @@
     "mumble_has_quit_normally": true,
     "network": {
         "auto_connect_to_last_server": ~L,
+        "jitter_buffer_size": 5,
         "use_quality_of_service": false
     },
     "plugins": {
