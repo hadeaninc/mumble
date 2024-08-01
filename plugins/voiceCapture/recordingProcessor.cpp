@@ -75,11 +75,19 @@ void RecordingProcessor::process() {
             userID = std::stoi(idStr);
             username = m_userTickMap.at(userID).username;
         } catch (const std::exception& e) {
+            // Very occassionally, we'd run into a scenario where a file that was made as part of a
+            // new recording was being included in the list of files of the old recording, and this
+            // would somehow trigger this codepath to be executed. A proper fix for this would likely
+            // involve creating a new folder for each recording, but hopefully we can just get away
+            // with leaving the file alone for the new recording when it is finished. Down side is
+            // that if, for whatever reason, an invalid file appears in the folder, it will be logged
+            // continuously.
+
             // If a user ID can't be extracted from the file, or it wasn't a valid user ID,
-            // try to delete the file straight away, i.e. ignore it.
-            LOG("Failed to extract user ID from file \"" << file << "\" (file will be deleted): " <<
+            // ~~try to delete the file straight away~~, i.e. ignore it.
+            LOG("Failed to extract user ID from file \"" << file << "\" (file will not be deleted): " <<
                 e.what());
-            deleteFile(file);
+            // deleteFile(file);
             continue;
         }
 
