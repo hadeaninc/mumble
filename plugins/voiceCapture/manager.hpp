@@ -17,8 +17,7 @@
 #pragma once
 
 #define JSON_CONFIG "./voiceCapture.json"
-#define LOCK(m) try { const std::lock_guard<std::mutex> lock(m); } catch (const std::exception& e) { \
-    LOG("CRITICAL! COULD NOT LOCK " << #m << ", BAD THINGS WILL HAPPEN... " << e.what()); }
+#define LOCK(m) const std::lock_guard<std::mutex> lock(m);
 #define LOCK2(m, n) LOCK(m); LOCK(n)
 
 class Manager {
