@@ -18,7 +18,7 @@
 
 #define JSON_CONFIG "./voiceCapture.json"
 #define LOCK(m) const std::lock_guard<std::mutex> lock(m);
-#define LOCK2(m, n) LOCK(m); LOCK(n)
+#define LOCK2(m, n) const std::lock_guard<std::mutex> lock1(m); const std::lock_guard<std::mutex> lock2(m)
 
 class Manager {
     std::thread m_manager;
